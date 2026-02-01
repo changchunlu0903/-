@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>设备检测与跳转</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            animation: fadeIn 0.8s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #ffd89b, #19547b);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+        
+        .device-info {
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 25px 0;
+            text-align: left;
+        }
+        
+        .info-row {
+            display: flex;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        
+        .info-label {
+            font-weight: 600;
+            min-width: 180px;
+            color: #a8e6cf;
+        }
+        
+        .loading {
+            margin: 30px 0;
+            padding: 20px;
+        }
+        
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .redirect-text {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .countdown {
+            font-size: 1.1rem;
+            color: #ffd89b;
+        }
+        
+        .buttons {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .btn {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 200px;
+        }
+        
+        .btn i {
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+        
+        .btn-pc {
+            background: linear-gradient(90deg, #11998e, #38ef7d);
+            color: white;
+        }
+        
+        .btn-mobile {
+            background: linear-gradient(90deg, #f46b45, #eea849);
+            color: white;
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 7px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .btn:active {
+            transform: translateY(1px);
+        }
+        
+        .footer {
+            margin-top: 40px;
+            font-size: 0.9rem;
+            opacity: 0.7;
+            max-width: 800px;
+        }
+        
+        .manual-select {
+            margin-top: 30px;
+            padding-top: 25px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .manual-title {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            color: #a8e6cf;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 25px;
+            }
+            
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .btn {
+                min-width: 100%;
+            }
+            
+            .info-label {
+                min-width: 140px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .device-info {
+                padding: 15px;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1><i class="fas fa-laptop"></i> 设备检测</h1>
+        <p class="subtitle">正在检测您的设备类型，并自动跳转到合适的页面</p>
+        
+        <div class="device-info">
+            <div class="info-row">
+                <span class="info-label">设备类型：</span>
+                <span id="device-type">检测中...</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">浏览器信息：</span>
+                <span id="browser-info">检测中...</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">屏幕分辨率：</span>
+                <span id="screen-resolution">检测中...</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">跳转目标：</span>
+                <span id="redirect-target">等待检测...</span>
+            </div>
+        </div>
+        
+        <div class="loading">
+            <div class="spinner"></div>
+            <div class="redirect-text" id="redirect-message">正在检测设备...</div>
+            <div class="countdown" id="countdown">自动跳转倒计时：<span id="countdown-number">5</span>秒</div>
+        </div>
+        
+        <div class="manual-select">
+            <div class="manual-title">手动选择版本</div>
+            <p style="margin-bottom: 20px; opacity: 0.9;">如果自动跳转未生效，请手动选择适合您设备的版本：</p>
+            
+            <div class="buttons">
+                <button class="btn btn-pc" id="pc-btn">
+                    <i class="fas fa-desktop"></i> 电脑版 (www/index.html)
+                </button>
+                <button class="btn btn-mobile" id="mobile-btn">
+                    <i class="fas fa-mobile-alt"></i> 手机版 (wap/index.html)
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>© 2023 设备检测页面 | 自动适配电脑和移动设备</p>
+    </div>
+
+    <script>
+        // 检测设备类型
+        function detectDevice() {
+            const userAgent = navigator.userAgent.toLowerCase();
+            const screenWidth = window.screen.width;
+            const screenHeight = window.screen.height;
+            
+            // 常见移动设备关键词
+            const mobileKeywords = [
+                'mobile', 'android', 'iphone', 'ipod', 'ipad', 
+                'blackberry', 'windows phone', 'webos', 'opera mini', 
+                'iemobile', 'kindle', 'silk'
+            ];
+            
+            let isMobile = false;
+            
+            // 检查用户代理字符串
+            for (const keyword of mobileKeywords) {
+                if (userAgent.includes(keyword)) {
+                    isMobile = true;
+                    break;
+                }
+            }
+            
+            // 如果屏幕宽度较小，也可能是移动设备
+            if (!isMobile && screenWidth <= 768) {
+                isMobile = true;
+            }
+            
+            // 检测触摸屏支持
+            const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+            if (isTouchDevice && screenWidth <= 1024) {
+                isMobile = true;
+            }
+            
+            return {
+                isMobile: isMobile,
+                userAgent: navigator.userAgent,
+                screenWidth: screenWidth,
+                screenHeight: screenHeight
+            };
+        }
+        
+        // 更新设备信息显示
+        function updateDeviceInfo(deviceData) {
+            document.getElementById('device-type').textContent = deviceData.isMobile ? '移动设备 (手机/平板)' : '电脑/笔记本';
+            document.getElementById('browser-info').textContent = navigator.userAgent.substring(0, 80) + '...';
+            document.getElementById('screen-resolution').textContent = `${deviceData.screenWidth} × ${deviceData.screenHeight} 像素`;
+            
+            const targetUrl = deviceData.isMobile ? 'wap/index.html' : 'www/index.html';
+            document.getElementById('redirect-target').textContent = targetUrl;
+            
+            return targetUrl;
+        }
+        
+        // 执行跳转
+        function redirectTo(targetUrl) {
+            // 显示跳转消息
+            const deviceType = targetUrl.includes('wap/') ? '手机版' : '电脑版';
+            document.getElementById('redirect-message').textContent = `正在跳转到${deviceType}页面...`;
+            
+            // 倒计时
+            let countdown = 5;
+            const countdownElement = document.getElementById('countdown-number');
+            const countdownInterval = setInterval(() => {
+                countdown--;
+                countdownElement.textContent = countdown;
+                
+                if (countdown <= 0) {
+                    clearInterval(countdownInterval);
+                    // 执行跳转
+                    window.location.href = targetUrl;
+                }
+            }, 1000);
+        }
+        
+        // 页面加载完成后执行
+        document.addEventListener('DOMContentLoaded', function() {
+            const deviceData = detectDevice();
+            const targetUrl = updateDeviceInfo(deviceData);
+            
+            // 开始跳转倒计时
+            redirectTo(targetUrl);
+            
+            // 手动跳转按钮
+            document.getElementById('pc-btn').addEventListener('click', function() {
+                document.getElementById('redirect-message').textContent = '正在跳转到电脑版页面...';
+                document.getElementById('countdown').textContent = '立即跳转...';
+                setTimeout(() => {
+                    window.location.href = 'www/index.html';
+                }, 300);
+            });
+            
+            document.getElementById('mobile-btn').addEventListener('click', function() {
+                document.getElementById('redirect-message').textContent = '正在跳转到手机版页面...';
+                document.getElementById('countdown').textContent = '立即跳转...';
+                setTimeout(() => {
+                    window.location.href = 'wap/index.html';
+                }, 300);
+            });
+            
+            // 添加一些设备检测的详细信息
+            setTimeout(() => {
+                const details = [
+                    `操作系统: ${navigator.platform}`,
+                    `语言: ${navigator.language}`,
+                    `Cookie 支持: ${navigator.cookieEnabled ? '是' : '否'}`,
+                    `在线状态: ${navigator.onLine ? '在线' : '离线'}`
+                ];
+                
+                const infoDiv = document.querySelector('.device-info');
+                details.forEach(detail => {
+                    const row = document.createElement('div');
+                    row.className = 'info-row';
+                    row.innerHTML = `<span class="info-label">${detail.split(':')[0]}:</span> <span>${detail.split(':')[1]}</span>`;
+                    infoDiv.appendChild(row);
+                });
+            }, 1000);
+        });
+        
+        // 防止快速连续点击
+        let isRedirecting = false;
+        function safeRedirect(url) {
+            if (!isRedirecting) {
+                isRedirecting = true;
+                window.location.href = url;
+            }
+        }
+    </script>
+</body>
+</html>
